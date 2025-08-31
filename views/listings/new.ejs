@@ -1,0 +1,38 @@
+<% layout('/layouts/boilerplate') -%>
+        <div class="row">
+            <body>
+            <div class="col-8 offset-2 mt-3">
+                 <h3 >Create New Listing</h3>
+                <form method="post" action="/listings">
+                    <div class="mb-3">
+                        <b><label for="title" class="form-label">Title</label></b>
+                        <input placeholder="Enter a catchy title" name="Listing[title]" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <b><label for="description" class="form-label">Discription</label></b>
+                        <textarea placeholder="description"  name="Listing[description]" class="form-control"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <b><label for="image" class="form-label">Image URL</label></b>
+                        <input placeholder="Image Url" name="Listing[url]" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <b><label for="price" class="form-label">Price</label></b>
+                        <input placeholder="1200" name="Listing[price]" class="form-control">
+                    </div>
+                    <div class="row">
+                        <div class="mb-3 col-md-7">
+                            <b><label for="location" class="form-label">Location</label></b>
+                            <input placeholder="Lucknow,UttarPradesh" name="Listing[location]" class="form-control">
+                        </div>
+                        <div class="mb-3 col-md-5">
+                            <b><label for="country" class="form-label">Country</label></b>
+                            <input placeholder="India" name="Listing[country]" class="form-control">
+                        </div>
+                    </div>
+                    <button class="btn btn-dark add-btn">Submit</button><br><br>
+                </form>
+            </div>
+            </body>
+        </div>
+    
