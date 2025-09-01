@@ -5,6 +5,7 @@ const listing=require("./models/listing.js");
 const path=require("path");
 const methodOverride=require("method-override");
 const ejsMate=require("ejs-mate");
+const wrapAsync=require("./utils/wrapAsync.js")
 
 main().then(()=>{
     console.log("Database connection successfull");
@@ -48,7 +49,7 @@ app.get("/listings",async (req,res)=>{
 });
 
 //Create route
-app.post("/listings",async (req,res)=>{
+app.post("/listings",wrapAsync(async (req,res,next)=>{
     // let{title,description,price,location,country}=req.body;
     // const newListing=new listing({
     //     title:title,
@@ -57,15 +58,11 @@ app.post("/listings",async (req,res)=>{
     //     location:location,
     //     country:country
     // });
-    const newListing=new listing(req.body.Listing);
-    // res.send("working");
-    newListing.save().then((res)=>{
-        // console.log(res);
-    }).catch((err)=>{
-        console.log(err);
-    });
-    res.redirect("/listings");
-});
+        const newListing = new listing(req.body.Listing);
+        // res.send("working");
+        await newListing.save()
+        res.redirect("/listings");
+}));
 
 //new route
 app.get("/listings/new",(req,res)=>{
@@ -101,6 +98,12 @@ app.delete("/listings/:id",async (req,res)=>{
     await listing.findByIdAndDelete(id);
     res.redirect("/listings");
 });
+
+//Custom error handler
+app.use((err,req,res,next)=>{
+    res.send("Something went wrong");
+})
+
 app.listen(8080,()=>{
     console.log("app is running on port 8080");
 });
