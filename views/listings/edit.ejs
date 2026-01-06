@@ -1,48 +1,59 @@
 <% layout('/layouts/boilerplate') -%>
-<div class="row">
-    <div class="col-8 offset-2 mt-3">
-        <body>
-    <h3>Edit Listing</h3>
-    <form method="post" action="/listings/<%= Listing.id %>?_method=PUT" novalidate class="needs-validation">
-        <div class="col-mb3">
-            <b><label for="title" class="form-label">Title</label></b>
-            <input value="<%= Listing.title %>" name="Listing[title]" class="form-control" required>
-            <div class="valid-feedback">Title looks good!</div>
+    <div class="row">
+        <div class="col-8 offset-2 mt-3">
+
+            <body>
+                <h3>Edit Listing</h3>
+                <form method="post" action="/listings/<%= Listing.id %>?_method=PUT" novalidate class="needs-validation"
+                    enctype="multipart/form-data">
+                    <div class="col-mb3">
+                        <b><label for="title" class="form-label">Title</label></b>
+                        <input value="<%= Listing.title %>" name="listing[title]" class="form-control" required>
+                        <div class="valid-feedback">Title looks good!</div>
+                    </div>
+                    <div class="col-mb3">
+                        <b><label for="description" class="form-label">Description</label></b>
+                        <textarea name="listing[description]" class="form-control"
+                            required><%=Listing.description%></textarea>
+                        <div class="invalid-feedback">Please enter a short Discription</div>
+                    </div><br>
+                    <div class="mb-3">
+                        <b>
+                            <p>Listing Image</p>
+                        </b>
+                        <img src="<%= originalImgUrl %>" style="width:300px; height:200px; object-fit:cover;"
+                            class="rounded shadow border" />
+
+                    </div>
+
+                    <div class="mb-3">
+                        <b><label for="image" class="form-label">Update Image</label></b>
+                        <input name="listing[image]" class="form-control" type="file">
+                    </div>
+
+
+                    <div class="col-mb3">
+                        <b><label for="price" class="form-label">Price</label></b>
+                        <input value="<%= Listing.price %>" name="listing[price]" class="form-control" required>
+                        <div class="invalid-feedback">Price should be valid</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-mb3 col-md-7">
+                            <b><label for="location" class="form-label">Location</label></b>
+                            <input value="<%= Listing.location %>" name="listing[location]" class="form-control"
+                                required>
+                            <div class="invalid-feedback">Location should be valid</div>
+                        </div>
+
+                        <div class="col-mb3 col-md-5">
+                            <b><label for="country" class="form-label">Country</label></b>
+                            <input value="<%= Listing.country %>" name="listing[country]" class="form-control" required>
+                            <div class="invalid-feedback">Country name should be valid</div>
+                        </div>
+                    </div>
+                    <br>
+                    <button class="btn btn-dark edit-btn">Edit</button><br><br>
+                </form>
+            </body>
         </div>
-        <div class="col-mb3">
-            <b><label for="description" class="form-label">Description</label></b>
-            <textarea name="description" class="form-control" required><%=Listing.description%></textarea>
-            <div class="invalid-feedback">Please enter a short Discription</div>
-        </div>
-        
-        <div class="col-mb3">
-            <b><label for="Image URL" class="form-label">Image URL</label></b>
-            <input value="<%= Listing.image.url %>" name="Listing[image][url]" class="form-control" required>
-            <div class="invalid-feedback">Please enter a Valid image URL</div>
-        </div>
-        
-        <div class="col-mb3">
-            <b><label for="price" class="form-label">Price</label></b>
-            <input value="<%= Listing.price %>" name="Listing[price]" class="form-control" required>
-            <div class="invalid-feedback">Price should be valid</div>
-        </div>
-        <div class="row">
-        <div class="col-mb3 col-md-7">
-            <b><label for="location" class="form-label">Location</label></b>
-            <input value="<%= Listing.location %>" name="Listing[location]" class="form-control" required>
-            <div class="invalid-feedback">Location should be valid</div>
-        </div>
-        
-        <div class="col-mb3 col-md-5">
-            <b><label for="country" class="form-label">Country</label></b>
-            <input value="<%= Listing.country %>" name="Listing[country]" class="form-control" required>
-            <div class="invalid-feedback">Country name should be valid</div>
-        </div>
-        </div>
-        <br>
-        <button class="btn btn-dark edit-btn">Edit</button><br><br>
-    </form>
-</body>
     </div>
-</div>
-<script src="/js/script.js"></script>

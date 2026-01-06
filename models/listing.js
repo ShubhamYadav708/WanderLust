@@ -1,5 +1,6 @@
 const mongoose=require("mongoose");
 const Schema=mongoose.Schema;
+const Review=require("./review.js");
 
 const listingSchema=new Schema({
     title:{
@@ -8,15 +9,8 @@ const listingSchema=new Schema({
     },
     description:String,
     image:{
+        url:String,
         filename:String,
-        url: {
-        type: String,
-        default:"https://media.istockphoto.com/id/1396856251/photo/colonial-house.jpg?s=612x612&w=0&k=20&c=_tGiix_HTQkJj2piTsilMuVef9v2nUwEkSC9Alo89BM=",
-        set: (v) =>
-            v === " "
-                ? "https://media.istockphoto.com/id/1396856251/photo/colonial-house.jpg?s=612x612&w=0&k=20&c=_tGiix_HTQkJj2piTsilMuVef9v2nUwEkSC9Alo89BM="
-                : v
-        }
     },
     price: {
         type: Number,
@@ -25,9 +19,24 @@ const listingSchema=new Schema({
     },
 
     location:String,
-    country:String
+    country:String,
+    reviews:[
+        {
+            type:Schema.Types.ObjectId,
+            ref:"Review",
+        },
+    ],
+    owner:{
+        type:Schema.Types.ObjectId,
+        ref:"User"
+    }
 });
 
+listingSchema.post("findOneAndDelete",async(listing)=>{
+    if(listing){
+        await Review.deleteMany({_id:{$in:listing.reviews}});
+    }
+})
 const listing=mongoose.model("listing",listingSchema);
 
 module.exports=listing;

@@ -1,125 +1,102 @@
-const express=require("express");
-const app=express();
-const mongoose=require("mongoose");
-const listing=require("./models/listing.js");
-const path=require("path");
-const methodOverride=require("method-override");
-const ejsMate=require("ejs-mate");
-const wrapAsync=require("./utils/wrapAsync.js");
-const ExpressError=require("./utils/ExpressError");
-const {listingSchema}=require("./schema.js");
+if (process.env.NODE_ENV !== "production") {
+    require("dotenv").config();
+}
 
-main().then(()=>{
-    console.log("Database connection successfull");
-})
-.catch((err)=>{
-    console.log(err);
-});
+const express = require("express");
+const app = express();
+const mongoose = require("mongoose");
+const path = require("path");
+const methodOverride = require("method-override");
+const ejsMate = require("ejs-mate");
 
-async function main(){
-    await mongoose.connect("mongodb://127.0.0.1:27017/WanderLust");
-};
+const listingRoute = require("./routes/listingRoutes.js");
+const reviewRoute = require("./routes/reviewRoutes.js");
+const userRoute = require("./routes/userRoutes.js");
 
-app.set("views",path.join(__dirname,"views"));
-app.set("view engine","ejs");
-app.use(express.urlencoded({extended:true}));
+const session = require("express-session");
+const MongoStore=require("connect-mongo").default;
+const flash = require("connect-flash");
+
+const passport = require("passport");
+const LocalStrategy = require("passport-local");
+const User = require("./models/user.js");
+
+
+const dbUrl = process.env.ATLASDB_URL;
+mongoose.connect(dbUrl, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => console.log("Database connection successful"))
+    .catch((err) => console.log("Database connection error:", err));
+
+
+app.set("views", path.join(__dirname, "views"));
+app.set("view engine", "ejs");
+app.engine("ejs", ejsMate);
+
+app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
-app.engine("ejs",ejsMate);
-app.use(express.static(path.join(__dirname,"/public")));
+app.use(express.static(path.join(__dirname, "/public")));
 
-// app.get("/testlisting",async (req,res)=>{
-//     let sampleListing=new listing({
-//         title:"Beautiful farmhouse",
-//         discription:"On the mountains",
-//         location:"Kashmir,J&K",
-//         country:"India"
-//     });
-//     await sampleListing.save();
-//     console.log("sample was saved");
-//     res.send("Testing was successful");
-// })
+const mstore=MongoStore.create({
+    mongoUrl:dbUrl,
+    crypto:{
+        secret: process.env.SECRET,
+    },
+    touchAfter: 24*3600,
+});
 
-// app.get("/",(req,res)=>{
-//     res.send("route is working");
-// });
+mstore.on("error",(err)=>{
+    console.log("Error in Mongo session store",err);
+});
 
-//Index route
-app.get("/listings",wrapAsync(async (req,res)=>{
-    // res.send("Route working successfully!!");
-    let allListings=await listing.find({});
-    res.render("listings/index.ejs",{allListings});
+app.use(session({
+    store:mstore,
+    secret: process.env.SECRET,
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+        httpOnly: true,
+        maxAge: 7 * 24 * 60 * 60 * 1000,ys
+    },
 }));
 
-//Create route
-app.post("/listings",wrapAsync(async (req,res,next)=>{
-    // let{title,description,price,location,country}=req.body;
-    // const newListing=new listing({
-    //     title:title,
-    //     description:description,
-    //     price:price,
-    //     location:location,
-    //     country:country
-    // });
-        let result=listingSchema.validate(req.body);
-        console.log(result);
-        if(result.error){
-            throw new ExpressError(400,result.error);
-        }
-        const newListing = new listing(req.body.Listing);
-        // res.send("working");
-        await newListing.save()
-        res.redirect("/listings");
-}));
+app.use(flash());
 
-//new route
-app.get("/listings/new",(req,res)=>{
-    // res.send("route working");
-    res.render("./listings/new.ejs");
-})
 
-//Show route
-app.get("/listings/:id",wrapAsync(async (req,res)=>{
-    let{id}=req.params;
-    const Listing=await listing.findById(id);
-    //console.log(Listing);
-    res.render("./listings/show.ejs",{Listing});
-}));
+app.use(passport.initialize());
+app.use(passport.session());
 
-//edit route
-app.get("/listings/:id/edit",wrapAsync(async (req,res)=>{
-    let{id}=req.params;
-    const Listing=await listing.findById(id);
-    res.render("./listings/edit.ejs",{Listing});
-}));
+passport.use(new LocalStrategy(User.authenticate()));
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
 
-//update route
-app.put("/listings/:id", wrapAsync(async(req,res)=>{
-    let{id}=req.params;
-    await listing.findByIdAndUpdate(id,{...req.body.Listing});
-    res.redirect("/listings");
-}));
 
-//delete route
-app.delete("/listings/:id",wrapAsync(async (req,res)=>{
-    let{id}=req.params;
-    await listing.findByIdAndDelete(id);
-    res.redirect("/listings");
-}));
+app.use((req, res, next) => {
+    res.locals.success = req.flash("success");
+    res.locals.error = req.flash("error");
+    res.locals.currUser = req.user;
+    next();
+});
 
-// Catch-all for undefined routes
+
+app.use("/listings", listingRoute);
+app.use("/listings/:id/reviews", reviewRoute);
+app.use("/", userRoute);
+
+
 app.all("*", (req, res, next) => {
-    next(new ExpressError(404, "Page Not Found!!"));
+    const err = new Error("Page Not Found");
+    err.status = 404;
+    next(err);
 });
 
 
-//Custom error handler
-app.use((err,req,res,next)=>{
-    let{status=500,message="Some error has occured"}=err;
-    // res.status(status).send(message);
-    res.status(status).render("listings/error.ejs",{err});
+app.use((err, req, res, next) => {
+    if (res.headersSent) return next(err);
+    const { status = 500, message = "Something went wrong!" } = err;
+    res.status(status).render("listings/error.ejs", { err });
 });
 
-app.listen(8080,()=>{
-    console.log("app is running on port 8080");
-});
 
+app.listen(8080, () => {
+    console.log("App is running on port 8080");
+});
