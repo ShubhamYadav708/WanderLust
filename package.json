@@ -1,6 +1,6 @@
 {
-  "engines":{
-    "node":"20.19.4"
+  "engines": {
+    "node": "20.19.4"
   },
   "name": "majorpro-1",
   "version": "1.0.0",
@@ -25,6 +25,7 @@
     "express-session": "^1.18.2",
     "joi": "^18.0.1",
     "method-override": "^3.0.0",
+    "mongodb": "^7.0.0",
     "mongoose": "^8.17.1",
     "multer": "^2.0.2",
     "multer-storage-cloudinary": "^4.0.0",
